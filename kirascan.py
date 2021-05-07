@@ -28,11 +28,14 @@ class Scan:
             pocket = Popen(f'ping -q -c 3 {ip[1]}'.split(' '), stdout=PIPE)
             stdout = pocket.communicate()[0]
             match = re.search(rb'(\d+\.\d+)\/(\d+\.\d+)\/(\d+\.\d+)\/(\d+\.\d+)\s+ms', stdout)
-            if not (match is None): 
-                avg = float(match.group(2))
-                print(f"PING [{ip[0]} of {iplist_len-1}]  {ip[1]} average ping is {avg} ms.")
-                ip_dict={f"{ip[1]}":avg}
-                self.ip_ping.update(ip_dict)
+            if not (match is None):
+                req = requests.get(f'http://{ip[1]}:11000/api/kira/status')
+                json = req.json()
+                if req.status_code == 200: 
+                    avg = float(match.group(2))
+                    print(f"PING [{ip[0]} of {iplist_len-1}]  {ip[1]} average ping is {avg} ms. Block heigt: {json['sync_info']['latest_block_height']}")
+                    ip_dict={f"{ip[1]}":avg}
+                    self.ip_ping.update(ip_dict)
             else: 
                 print(f"PING [{ip[0]} of {iplist_len-1}]  {ip[1]} FAILED")
     def peerstr(self):
