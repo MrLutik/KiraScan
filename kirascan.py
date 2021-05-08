@@ -24,9 +24,11 @@ class Scan:
         iplist = self.iplist()
         iplist_len = len(iplist)
         for ip in enumerate(iplist):
-
-            pocket = Popen(f'ping -q -c 3 {ip[1]}'.split(' '), stdout=PIPE)
-            stdout = pocket.communicate()[0]
+            try:
+                pocket = Popen(f'ping -q -c 3 {ip[1]}'.split(' '), stdout=PIPE)
+                stdout = pocket.communicate()[0]
+            except ConnectionError:
+                pass
             match = re.search(rb'(\d+\.\d+)\/(\d+\.\d+)\/(\d+\.\d+)\/(\d+\.\d+)\s+ms', stdout)
             if not (match is None):
                 req = requests.get(f'http://{ip[1]}:11000/api/kira/status')
