@@ -50,10 +50,8 @@ class Scan:
 
 if __name__ == '__main__':
     src = Scan('all')
-    for ip in src.iplist():
-        print(ip)
-    #src.pingall()
-    #print("Private peers sorted by avg ping: ", src.peerstr())
+    src.pingall()
+    print("Private peers sorted by avg ping: ", src.peerstr())
     
  
 
