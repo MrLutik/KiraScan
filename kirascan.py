@@ -31,7 +31,10 @@ class Scan:
                 pass
             match = re.search(rb'(\d+\.\d+)\/(\d+\.\d+)\/(\d+\.\d+)\/(\d+\.\d+)\s+ms', stdout)
             if not (match is None):
-                req = requests.get(f'http://{ip[1]}:11000/api/kira/status')
+                try:
+                    req = requests.get(f'http://{ip[1]}:11000/api/kira/status')
+                except ConnectionError:
+                    pass
                 json = req.json()
                 if req.status_code == 200: 
                     avg = float(match.group(2))
