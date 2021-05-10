@@ -27,13 +27,15 @@ class Scan:
             try:
                 pocket = Popen(f'ping -q -c 3 {ip[1]}'.split(' '), stdout=PIPE)
                 stdout = pocket.communicate()[0]
-            except ConnectionError:
+            except requests.exceptions.RequestException as err:
+                print(err)
                 pass
             match = re.search(rb'(\d+\.\d+)\/(\d+\.\d+)\/(\d+\.\d+)\/(\d+\.\d+)\s+ms', stdout)
             if not (match is None):
                 try:
                     req = requests.get(f'http://{ip[1]}:11000/api/kira/status')
-                except ConnectionError:
+                except requests.exceptions.RequestException as err:
+                    print(err)
                     pass
                 json = req.json()
                 if req.status_code == 200: 
