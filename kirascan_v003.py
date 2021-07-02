@@ -8,6 +8,7 @@ class Node:
     def __init__(self,ip) -> None:
         self.node_ip = ip
         self.cpu = mp.cpu_count()
+        self.status={"ip":self.node_ip}
 
     check_links = [
                     ":16657/status", # SEED node
@@ -23,21 +24,25 @@ class Node:
     def node_status(self,link) -> dict:
         # Check status of given links. Add them to dict. 
         # TODO: dump it to json
-
+        node_status = dict()
         with subprocess.Popen(['curl', '-r0-0', '--fail','-sS', f'http://{self.node_ip}{link}'],stderr=subprocess.PIPE,stdout=subprocess.PIPE) as proc:
             resp = proc.stderr.read().decode('utf-8')
             if resp != '':
-                print(link, 'FAILED')
+                d = {link:"FAILED"}
+                node_status.update(d)
+                print(node_status)
             else:
-                print(link, 'SUCCESS')
- 
+                d = {link:'SUCCESS'}
+                node_status.update(d)
+                print(node_status)
+        self.status.update(node_status)
 
 if __name__ == '__main__':
     a = Node("213.136.81.248")
     with mp.Pool(a.cpu) as pool:
         res = pool.map_async(a.node_status, a.check_links)
         res.get()
-
+    print(a.status)
     #a.node_info()
     #print(dic)
     #print(status1)
