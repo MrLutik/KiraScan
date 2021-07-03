@@ -29,7 +29,6 @@ class Node:
                 return link +' FAILED' 
             else:   
                 return link +' SUCESS' 
-        return 'test'
 
 if __name__ == '__main__':
     a = Node("213.136.81.248")
