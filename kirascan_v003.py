@@ -1,8 +1,5 @@
 import subprocess
 import multiprocessing as mp
-import json
-import shelve
-
 
 class Node:
     def __init__(self,ip) -> None:
@@ -26,17 +23,17 @@ class Node:
             resp = proc.stderr.read().decode('utf-8')
             if resp != '':
                 # TODO: dump status of the node to sqlite                             
-                return link +' FAILED' 
+                return {link:'FAILED'} 
             else:   
-                return link +' SUCESS' 
+                return {link:'SUCCESS'} 
 
 if __name__ == '__main__':
-    a = Node("213.136.81.248")
+    a = Node("46.101.96.184")
     with mp.Pool(a.cpu) as pool:
         res = pool.map_async(a.node_status, a.check_links)
         data = res.get()
-    for pc in data:
-        print(pc)
+    all = {k:v for pc in data for k,v in pc.items()}
+   
     #print("status:",a.status)
     #a.node_info()
     #print(dic)
