@@ -1,9 +1,14 @@
+from os import stat
 import subprocess
 import multiprocessing as mp
+
+import requests
 
 class Node:
     def __init__(self,ip) -> None:
         self.node_ip = ip
+        global node_ip # multiprocessing variable 
+        node_ip = self.node_ip
         self.cpu = mp.cpu_count()
 
     check_links = [
@@ -17,24 +22,37 @@ class Node:
                     ":11000/download/snapshot.zip"
                     ]
 
-    def node_status(self,link) -> dict:
-        # Check status of given links.  
-        with subprocess.Popen(['curl', '-r0-0', '--fail','-sS', f'http://{self.node_ip}{link}'],stderr=subprocess.PIPE,stdout=subprocess.PIPE) as proc:
+    def _status_check(link) -> dict:
+        # Check status of given links.
+        global node_ip
+        with subprocess.Popen(['curl', '-r0-0', '--fail','-sS', f'http://{node_ip}{link}'],stderr=subprocess.PIPE,stdout=subprocess.PIPE) as proc:
             resp = proc.stderr.read().decode('utf-8')
             if resp != '':
                 # TODO: dump status of the node to sqlite                             
                 return {link:'FAILED'} 
             else:   
-                return {link:'SUCCESS'} 
+                return {link:'SUCCESS'}
+
+    def node_status(self) -> dict:
+        # multiprocessing launch of the node_status function
+             
+
+        with mp.Pool(self.cpu) as pool:
+            res = pool.map_async(Node._status_check, self.check_links)
+            status = res.get()
+        return status
+
+    def validator(self) -> str:
+        req = requests.get(f"http://{self.node_ip}:56657/status")
+        data = req.json()
+        return {'proposer':data['result']['validator_info']['address'],'node_ip':f"{self.node_ip}"}
+
 
 if __name__ == '__main__':
     a = Node("46.101.96.184")
-    with mp.Pool(a.cpu) as pool:
-        res = pool.map_async(a.node_status, a.check_links)
-        data = res.get()
-    all = {k:v for pc in data for k,v in pc.items()}
-   
-    #print("status:",a.status)
-    #a.node_info()
-    #print(dic)
-    #print(status1)
+    status = a.node_status()
+    all = {k:v for pc in status for k,v in pc.items()}
+    val_id = a.validator()
+    print(val_id)
+    print(all)
+
