@@ -1,9 +1,11 @@
+#!python 
+
+'''Initial database setup'''
 from datetime import datetime
 from operator import index
-import re
 from sqlalchemy import (Table, MetaData, Column, String, Integer, Float, create_engine, engine, insert,select)
+from sqlalchemy.sql.schema import ForeignKey
 from sqlalchemy.sql.sqltypes import DateTime
-import requests as rq
 
 metadata = MetaData()
 
@@ -17,13 +19,13 @@ validators = Table('validators', metadata,
             Column('website', String(50)),
             Column('social', String(50)),
             Column('identity', String(50)),
-            Column('comission', Float()),
+            Column('commission', Float()),
             Column('status', String(10), index=True),
             Column('rank', Integer()),
             Column('streak',Integer(), index=True),
             Column('mischance', Integer()),
             Column('mischance_confidence', Integer()),
-            Column('start_heigh', Integer()),
+            Column('start_height', Integer()),
             Column('inactive_until', String(25)),
             Column('last_present_block', Integer()),
             Column('missed_blocks_counter', Integer(), index=True),
@@ -33,21 +35,44 @@ validators = Table('validators', metadata,
             Column('updated_on', DateTime(), default=datetime.now, onupdate=datetime.now),
             )
 
-engine = create_engine('sqlite:///kira.db')
-metadata.create_all(engine)
+
+node_status = Table('status', metadata,
+            Column('node_ip', String(10), primary_key=True, unique=True),
+            Column('proposer', String(41), ForeignKey('validators.proposer')),
+            Column('seed_16657', String(8)),
+            Column('sentry_26657', String(8)),
+            Column('priv_sentry_36657', String(8)),
+            Column('snap_46657', String(8)),
+            Column('api_kira_status', String(8)),
+            Column('api_status', String(8)),
+            Column('download_peers', String(8)),
+            Column('download_snapshot', String(8)),
+            Column('created_on', DateTime(), default=datetime.now),
+            Column('updated_on', DateTime(), default=datetime.now, onupdate=datetime.now),
+)
+def createtables():
+    engine = create_engine('sqlite:///kira.db')
+    metadata.create_all(engine)
+
+if __name__ == '__main__':
+    createtables()
 
 # TODO: wrap in func or class
 # parsing RPC data to DB
-req = rq.get("https://testnet-rpc.kira.network/api/valopers?all=true")
-json_obj = req.json()
-for val_data in json_obj['validators']:
-    ins = validators.insert()
-    result=engine.execute(ins, val_data)
+#rpc = collectrpc()
+#for val_data in rpc['validators']:
+#    ins = validators.insert()
+#    try:
+#        result=engine.execute(ins, val_data)
+#    except Exception as e:
+#        print(e)
+#        pass
 
 
 
-s = select([validators])
-rp=engine.execute(s)
-results = rp.fetchall()
-print(results)    
+
+#s = select([validators])
+#rp=engine.execute(s)
+#results = rp.fetchall()
+#print(results)    
 
