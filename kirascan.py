@@ -12,7 +12,8 @@ class Node:
     check_links = [
                     ":16657/status", # SEED node
                     ":26657/status", # Sentry port
-                    ":36657/status", # Priv_sentry port
+                    ":36657/status",
+                    ":46657/status", # Priv_sentry port
                     ":56657/status", # Validator port | Minimal node
                     ":11000/api/kira/status",
                     ":11000/api/status",
@@ -22,17 +23,21 @@ class Node:
                     ]
 
     def _status_check(link) -> dict:
+
         # Check status of given links.
         global node_ip
-        with subprocess.Popen(['curl', '-r0-0', '--fail','-sS', f'http://{node_ip}{link}'],stderr=subprocess.PIPE,stdout=subprocess.PIPE) as proc:
+        
+        with subprocess.Popen(['curl', '-r0-0', '--fail','-m 3','-sS', f'http://{node_ip}{link}'],stderr=subprocess.PIPE,stdout=subprocess.PIPE) as proc:
             resp = proc.stderr.read().decode('utf-8')
-            if resp != '':
+            
+        if resp != '':
                 # TODO: dump status of the node to sqlite                             
-                return {link:'FAILED'} 
-            else:   
-                return {link:'SUCCESS'}
+            return {link:'FAILED'} 
+        else:   
+            return {link:'SUCCESS'}
 
     def _node_status(self) -> dict:
+        
         # multiprocessing launch of the node_status function
              
 
@@ -42,8 +47,9 @@ class Node:
         return status
 
     def _validator(self) -> dict:
+        
         try:
-            req = requests.get(f"http://{self.node_ip}:56657/status")
+            req = requests.get(f"http://{self.node_ip}:56657/status",timeout=1)
             data = req.json()
             return {'proposer':data['result']['validator_info']['address'],'node_ip':f"{self.node_ip}"}
         except Exception:
@@ -58,6 +64,7 @@ class Node:
     #    return faucet
 
     def status(self) -> dict:
+        
         val = self._validator()
         stat = self._node_status()
         #rint(stat)
@@ -69,7 +76,7 @@ class Node:
 
 
 if __name__ == '__main__':
-    a = Node("139.180.203.213")
+    a = Node("167.86.78.246")
     for k,v in a.status().items():
         print(k,v)
 
